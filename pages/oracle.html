@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>ORACLE</title>
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  background: #000; 
+  color: #111;
+  font-family: 'JetBrains Mono', monospace;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+canvas {
+  display: block;
+  z-index: 1; 
+}
+
+/* --- INTERFAZ --- */
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; 
+    pointer-events: none; /* Permite clickear el canvas debajo */
+}
+
+/* Botón de volver (Nuevo) */
+#btn-back {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: #000;
+    color: #ffffff;
+    border: 1px solid #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 8px 12px;
+    text-transform: uppercase;
+    text-decoration: none; /* Quitar subrayado de enlace */
+    cursor: pointer;
+    transition: all 0.2s;
+    pointer-events: auto; /* Habilitar click */
+}
+
+#btn-back:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+/* Controles existentes */
+.control-group {
+    position: absolute; 
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: auto; 
+}
+
+button {
+    background: #000;
+    color: #fff;
+    border: 1px solid #333;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 10px 0;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    width: 48%; 
+}
+
+button:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+}
+
+button:active {
+    background: #ccc;
+}
+
+#btn-download {
+    border-color: #555;
+}
+
+#btn-download:hover {
+    background: #ff4444; 
+    color: #fff;
+    border-color: #ff4444;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="ui-layer">
+    <a href="blackmarket.html" id="btn-back">[ X ] EXIT_TO_MARKET</a>
+
+    <div id="button-container" class="control-group">
+        <button id="btn-reset">RESET_MATRIX</button>
+        <button id="btn-download">DESCARGAR_MALWARE</button>
+    </div>
+</div>
+
+<canvas id="mainCanvas"></canvas>
+
+<script>
+/* ================= SETUP ================= */
+
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+const btnContainer = document.getElementById('button-container');
+
+let WIDTH, HEIGHT;
+
+// Configuración
+const POINTS = 12; // REDUCIDO A 12 NODOS
+
+// Layout Rects
+let floatPanelRect = { x:0, y:0, w:0, h:0 }; 
+let graphRect = { x:0, y:0, w:0, h:0 }; 
+let meterRect = { x:0, y:0, w:0, h:0 };     
+let textRect = { x:0, y:0, w:0, h:0 };       
+let barcodeRect = { x:0, y:0, w:0, h:0 };    
+let sidebarWidth = 0;                        
+
+// Estado
+let dragging = null;
+let chaosLevel = 0; 
+
+// Datos
+let pointsA = []; 
+let pointsB = []; 
+
+// Semillas
+let noiseMap = [];
+
+/* ================= INIT & RESIZE ================= */
+
+function resize() {
+  WIDTH = window.innerWidth;
+  HEIGHT = window.innerHeight;
+
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+
+  // --- Layout ---
+  const floatMargin = 60; 
+  const panelWidth = 350; 
+  sidebarWidth = panelWidth + (floatMargin * 2);
+
+  floatPanelRect = {
+    x: floatMargin,
+    y: floatMargin,
+    w: panelWidth,
+    h: HEIGHT - (floatMargin * 2) 
+  };
+
+  barcodeRect = {
+    x: sidebarWidth,
+    y: 0, 
+    w: WIDTH - sidebarWidth, 
+    h: HEIGHT 
+  };
+
+  const internalPadding = 20;
+  const graphHeight = 160;
+  const bottomSpace = 100; 
+
+  graphRect = {
+    x: floatPanelRect.x + internalPadding,
+    y: (floatPanelRect.y + floatPanelRect.h) - graphHeight - internalPadding - bottomSpace,
+    w: floatPanelRect.w - (internalPadding * 2),
+    h: graphHeight
+  };
+
+  meterRect = {
+    x: graphRect.x,
+    y: graphRect.y + graphRect.h + 15,
+    w: graphRect.w,
+    h: 30 
+  };
+
+  textRect = {
+    x: floatPanelRect.x + internalPadding,
+    y: floatPanelRect.y + internalPadding + 30, 
+    w: floatPanelRect.w - (internalPadding * 2),
+    h: graphRect.y - (floatPanelRect.y + internalPadding) - 40
+  };
+
+  updateUI();
+  
+  if(pointsA.length === 0) {
+      initPoints();
+      initNoise();
+  }
+}
+
+function updateUI() {
+    btnContainer.style.left = graphRect.x + 'px';
+    btnContainer.style.top = (meterRect.y + meterRect.h + 15) + 'px'; 
+    btnContainer.style.width = graphRect.w + 'px';
+}
+
+function initPoints() {
+  pointsA = [];
+  pointsB = []; 
+
+  for (let i = 0; i < POINTS; i++) {
+    // Ajustamos la frecuencia de la onda (i/2) para que se aprecie la curva con pocos puntos
+    const targetY = Math.sin(i / 2) * (graphRect.h * 0.25) + graphRect.h / 2;
+    pointsA.push(targetY);
+    pointsB.push(targetY); 
+  }
+}
+
+function initNoise() {
+    noiseMap = [];
+    for(let i=0; i<20000; i++) {
+        noiseMap.push(Math.random());
+    }
+}
+
+window.addEventListener('resize', () => {
+  resize();
+  draw();
+});
+
+/* ================= CALCULO DE CAOS ================= */
+
+function calculateChaos() {
+    let totalDist = 0;
+    for(let i=0; i<POINTS; i++) {
+        totalDist += Math.abs(pointsA[i] - pointsB[i]);
+    }
+    const avgDist = totalDist / POINTS;
+    // Calibración para 12 nodos
+    let pct = (avgDist / 40) * 100; 
+    chaosLevel = Math.min(100, Math.max(0, pct));
+}
+
+/* ================= BOTONES LOGIC ================= */
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+    pointsB = [...pointsA];
+    draw();
+});
+
+document.getElementById('btn-download').addEventListener('click', () => {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = barcodeRect.w;
+    tempCanvas.height = barcodeRect.h;
+    const tCtx = tempCanvas.getContext('2d');
+
+    tCtx.drawImage(
+        canvas, 
+        barcodeRect.x, barcodeRect.y, barcodeRect.w, barcodeRect.h,
+        0, 0, barcodeRect.w, barcodeRect.h
+    );
+
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,"-");
+    link.download = `MALWARE_COMPOSITION_${timestamp}.png`;
+    link.href = tempCanvas.toDataURL('image/png');
+    link.click();
+});
+
+/* ================= HELPER MATH ================= */
+
+function getNoise(index) {
+    return noiseMap[index % noiseMap.length];
+}
+
+/* ================= MAIN DRAW LOOP ================= */
+
+function draw() {
+  calculateChaos();
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, sidebarWidth, HEIGHT);
+
+  ctx.fillStyle = '#f4f4f4';
+  ctx.fillRect(barcodeRect.x, 0, barcodeRect.w, barcodeRect.h);
+
+  // Panel Flotante
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = '#080808'; 
+  ctx.fillRect(floatPanelRect.x, floatPanelRect.y, floatPanelRect.w, floatPanelRect.h);
+  ctx.restore(); 
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(floatPanelRect.x, floatPanelRect.y, floatPanelRect.w, floatPanelRect.h);
+
+  drawTextSection();
+  drawGraphSection();
+  drawChaosMeter(); 
+  drawDocumentLayout();
+  
+  if (chaosLevel > 75) {
+      drawAlerts();
+  }
+}
+
+/* ================= DRAWING FUNCTIONS ================= */
+
+function drawChaosMeter() {
+    ctx.fillStyle = '#111';
+    ctx.fillRect(meterRect.x, meterRect.y + 15, meterRect.w, 8);
+    
+    let barColor = '#00ffaa'; 
+    let riskText = "MODIFICATION: SAFE";
+
+    if (chaosLevel > 30) {
+        barColor = '#ffcc00'; 
+        riskText = "MODIFICATION: RISKY";
+    }
+    if (chaosLevel > 75) {
+        barColor = '#ff0000'; 
+        riskText = "MODIFICATION: DANGEROUS";
+    }
+
+    const fillW = (chaosLevel / 100) * meterRect.w;
+    ctx.fillStyle = barColor;
+    
+    if(chaosLevel > 75 && Math.random() > 0.8) {
+        ctx.fillStyle = '#fff';
+    }
+    
+    ctx.fillRect(meterRect.x, meterRect.y + 15, fillW, 8);
+
+    ctx.font = '700 10px JetBrains Mono';
+    ctx.fillStyle = '#666';
+    ctx.fillText("CHAOS_LEVEL:", meterRect.x, meterRect.y + 8);
+
+    ctx.fillStyle = barColor;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${chaosLevel.toFixed(1)}%`, meterRect.x + meterRect.w, meterRect.y + 8);
+    ctx.textAlign = 'left';
+
+    ctx.font = '10px JetBrains Mono';
+    ctx.fillStyle = chaosLevel > 75 ? '#ff4444' : '#888';
+    ctx.fillText(riskText, meterRect.x, meterRect.y + 36);
+}
+
+function drawAlerts() {
+    const warnings = ["WARNING", "DATA_CORRUPTION", "CRITICAL_ERR", "MALWARE_DETECTED", "OVERFLOW"];
+    const severity = (chaosLevel - 75) / 25; 
+    const count = Math.floor(severity * 10) + 1;
+
+    ctx.save();
+    
+    ctx.beginPath();
+    ctx.rect(barcodeRect.x, barcodeRect.y, barcodeRect.w, barcodeRect.h);
+    ctx.clip();
+
+    for(let i=0; i<count; i++) {
+        const margin = 50; 
+        const minX = barcodeRect.x + margin;
+        const maxX = barcodeRect.x + barcodeRect.w - 150; 
+        const minY = barcodeRect.y + margin;
+        const maxY = barcodeRect.y + barcodeRect.h - margin;
+
+        const x = minX + Math.random() * (maxX - minX);
+        const y = minY + Math.random() * (maxY - minY);
+        
+        ctx.font = '700 14px JetBrains Mono';
+        ctx.fillStyle = Math.random() > 0.5 ? '#ff0000' : '#000'; 
+        ctx.shadowColor = '#fff'; 
+        ctx.shadowBlur = 0;
+        
+        const txt = warnings[Math.floor(Math.random() * warnings.length)];
+        ctx.fillText(txt, x, y);
+        
+        if(Math.random() > 0.8) {
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 10, y - 20, 160, 40);
+        }
+    }
+    ctx.restore();
+}
+
+function drawTextSection() {
+  ctx.fillStyle = '#fff'; 
+  ctx.font = '800 24px JetBrains Mono';
+  ctx.fillText("ORACLE_SYS", textRect.x, floatPanelRect.y + 40);
+  
+  ctx.fillStyle = '#666'; 
+  ctx.font = '11px JetBrains Mono';
+  ctx.fillText("INTERACTIVE_MODULE_12", textRect.x, floatPanelRect.y + 55);
+  
+  // Ajustamos filas a 12 para que coincida exactamente con los nodos
+  const rows = 12; 
+  const rowH = textRect.h / rows;
+  ctx.font = '12px JetBrains Mono';
+
+  for(let i=0; i<rows; i++) {
+      const y = textRect.y + 30 + (i * rowH);
+      ctx.fillStyle = '#888';
+      ctx.fillText(`IDX_${i.toString().padStart(2,'0')}`, textRect.x, y);
+      ctx.fillStyle = '#333';
+      
+      let val = "SYNC";
+      let color = '#444';
+
+      if(pointsA[i] !== undefined && pointsB[i] !== undefined) {
+         const delta = pointsA[i] - pointsB[i];
+         if(Math.abs(delta) > 5) {
+             val = "UNSTABLE";
+             color = '#f00';
+         } else if (Math.abs(delta) > 1) {
+             val = "DRIFTING";
+             color = '#fa0';
+         }
+      }
+      
+      ctx.fillStyle = color;
+      ctx.fillText(val, textRect.x + textRect.w - 70, y);
+  }
+}
+
+function drawGraphSection() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(graphRect.x, graphRect.y, graphRect.w, graphRect.h);
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(graphRect.x, graphRect.y, graphRect.w, graphRect.h);
+
+  ctx.fillStyle = '#444';
+  ctx.font = '10px JetBrains Mono';
+  ctx.fillText("MANIPULATION_GRID", graphRect.x, graphRect.y - 8);
+
+  ctx.strokeStyle = '#222';
+  ctx.beginPath();
+  ctx.moveTo(graphRect.x, graphRect.y + graphRect.h/2);
+  ctx.lineTo(graphRect.x + graphRect.w, graphRect.y + graphRect.h/2);
+  ctx.stroke();
+
+  // Target A
+  ctx.strokeStyle = '#444';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  pointsA.forEach((localY, i) => {
+    const px = graphRect.x + (i / (POINTS - 1)) * graphRect.w;
+    const py = graphRect.y + localY;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // User B
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  pointsB.forEach((localY, i) => {
+    const px = graphRect.x + (i / (POINTS - 1)) * graphRect.w;
+    const py = graphRect.y + localY;
+    i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+  });
+  ctx.stroke();
+
+  pointsB.forEach((localY, i) => {
+    const px = graphRect.x + (i / (POINTS - 1)) * graphRect.w;
+    const py = graphRect.y + localY;
+    const dist = Math.abs(pointsA[i] - localY);
+    ctx.fillStyle = dist > 10 ? '#ff4444' : '#00ffaa';
+    ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2); ctx.fill();
+    if (i === dragging) {
+      ctx.strokeStyle = '#fff';
+      ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI*2); ctx.stroke();
+    }
+  });
+}
+
+function drawDocumentLayout() {
+  const padding = 120; 
+  
+  const docX = barcodeRect.x + padding;
+  const docY = barcodeRect.y + padding;
+  const docW = barcodeRect.w - (padding * 2);
+  const docH = barcodeRect.h - (padding * 2);
+
+  const layout = [
+      { type: 'h1',    hPct: 0.08, mb: 0.02 }, 
+      { type: 'meta',  hPct: 0.03, mb: 0.05 }, 
+      { type: 'image', hPct: 0.25, mb: 0.05 }, 
+      { type: 'cols',  hPct: 0.35, mb: 0.05 }, 
+      { type: 'para',  hPct: 0.15, mb: 0.00 }  
+  ];
+
+  let currentY = docY;
+
+  layout.forEach((block, blockIdx) => {
+      const blockH = docH * block.hPct;
+      const marginB = docH * block.mb;
+
+      if (block.type === 'h1') {
+          drawBarBlock(docX, currentY, docW, blockH, 1, 0.9, blockIdx); 
+      } 
+      else if (block.type === 'meta') {
+          drawBarBlock(docX, currentY, docW * 0.4, blockH, 1, 0.4, blockIdx); 
+      }
+      else if (block.type === 'image') {
+          drawBarBlock(docX, currentY, docW, blockH, 20, 1.0, blockIdx); 
+      }
+      else if (block.type === 'para') {
+          drawBarBlock(docX, currentY, docW, blockH, 6, 0.6, blockIdx);
+      }
+      else if (block.type === 'cols') {
+          const colW = (docW / 2) - 20;
+          drawBarBlock(docX, currentY, colW, blockH, 12, 0.5, blockIdx + 100);
+          drawBarBlock(docX + colW + 40, currentY, colW, blockH, 12, 0.5, blockIdx + 200);
+      }
+
+      currentY += blockH + marginB;
+  });
+}
+
+function drawBarBlock(x, y, w, h, rowCount, densityFactor, seedOffset) {
+    const rowHeight = h / rowCount;
+    const paddingRow = rowHeight * 0.4; 
+    const barMaxHeight = rowHeight - paddingRow;
+
+    for (let r = 0; r < rowCount; r++) {
+        const rowCenterY = y + (r * rowHeight) + (rowHeight / 2);
+        
+        for (let i = 0; i < POINTS; i++) {
+            const dist = Math.abs(pointsA[i] - pointsB[i]);
+            const error = Math.max(0, dist - 6); 
+
+            const n1 = getNoise(i * 10 + r * 50 + seedOffset * 100); 
+            const n2 = getNoise(i * 20 + r * 30 + seedOffset * 200); 
+
+            const px = x + (i / (POINTS - 1)) * w;
+            const baseW = (w / POINTS) * 0.85; 
+
+            if (error < 2 && n1 > 0.80 && rowCount > 1) continue; 
+
+            let barW = baseW;
+            let barH = barMaxHeight * densityFactor; 
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (error > 0) {
+                const chaos = error / 12; 
+                if (n1 < 0.25) {
+                    barW += chaos * 60 * n2; 
+                    barH *= 0.3; 
+                } 
+                else if (n1 < 0.50) {
+                    barH += chaos * 120 * n2; 
+                    barW *= 0.6; 
+                }
+                else if (n1 < 0.75) {
+                    offsetX = (n2 - 0.5) * chaos * 80;
+                }
+                else {
+                    barW += chaos * 15;
+                    barH += chaos * 25;
+                    offsetY = (n2 - 0.5) * chaos * 20;
+                }
+            }
+
+            if (barW < 1) barW = 1;
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect((px - barW/2) + offsetX, (rowCenterY - barH/2) + offsetY, barW, barH);
+        }
+    }
+}
+
+/* ================= INTERACCIÓN RATÓN ================= */
+
+function getMousePos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+}
+
+canvas.addEventListener('mousedown', e => {
+  const m = getMousePos(e);
+  if (m.x >= graphRect.x && m.x <= graphRect.x + graphRect.w &&
+      m.y >= graphRect.y && m.y <= graphRect.y + graphRect.h) {
+    let closestDist = 999;
+    let closestIdx = -1;
+    pointsB.forEach((localY, i) => {
+      const px = graphRect.x + (i / (POINTS - 1)) * graphRect.w;
+      const dist = Math.abs(px - m.x);
+      // Radio de interacción
+      if (dist < 40) { 
+        if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+      }
+    });
+    if (closestIdx !== -1) {
+      dragging = closestIdx;
+      let localMouseY = m.y - graphRect.y;
+      pointsB[dragging] = Math.max(0, Math.min(graphRect.h, localMouseY));
+      draw();
+    }
+  }
+});
+
+window.addEventListener('mousemove', e => {
+  if (dragging !== null) {
+    const m = getMousePos(e);
+    let localMouseY = m.y - graphRect.y;
+    localMouseY = Math.max(0, Math.min(graphRect.h, localMouseY));
+    pointsB[dragging] = localMouseY;
+    draw();
+  }
+});
+
+window.addEventListener('mouseup', () => dragging = null);
+canvas.addEventListener('mouseleave', () => dragging = null);
+
+// Start
+resize();
+draw();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROUTR</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            background: #000; 
+            color: #111; 
+            font-family: 'JetBrains Mono', monospace; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* BOTÓN VOLVER (NUEVO) */
+        #btn-back {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #000;
+            color: #ffffff;
+            border: 1px solid #333;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 8px 12px;
+            text-transform: uppercase;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 100; /* Asegura que esté por encima de todo */
+        }
+
+        #btn-back:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        /* --- PANEL IZQUIERDO --- */
+        .panel-left {
+            width: 350px;
+            min-width: 350px;
+            background: #080808;
+            border-right: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 10;
+            box-shadow: none; 
+        }
+
+        .header-title { color: #fff; font-weight: 800; font-size: 24px; margin-bottom: 5px; }
+        .header-sub { color: #666; font-size: 11px; margin-bottom: 30px; }
+
+        .monitor-box {
+            width: 100%;
+            height: 200px; 
+            background: #000;
+            border: 1px solid #333;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #monitorCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* INFO BOX */
+        .entity-info {
+            font-size: 11px; color: #ff8c00; margin-bottom: 10px; text-align: center; border: 1px solid #333; padding: 8px; background: #0a0a0a;
+        }
+
+        /* CONTROLS */
+        .controls-area { display: flex; flex-direction: column; gap: 25px; margin-bottom: 30px; }
+        .slider-group { display: flex; flex-direction: column; gap: 8px; user-select: none; }
+        .slider-label { display: flex; justify-content: space-between; color: #888; font-size: 10px; }
+        
+        .slider-track {
+            width: 100%; height: 4px; background: #222; position: relative; cursor: pointer;
+        }
+        .slider-fill {
+            height: 100%; background: #fff; pointer-events: none; width: 50%;
+        }
+        .slider-thumb {
+            width: 10px; height: 14px; background: #fff; position: absolute; top: -5px; 
+            transform: translateX(-50%); pointer-events: none; border: 1px solid #000; left: 50%;
+        }
+
+        /* BOTONES GRANDES */
+        .action-btn {
+            background: #22c55e;
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 15px 0;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background: #fff; }
+        .action-btn:active { transform: translateY(2px); }
+        
+        .action-btn.processing {
+            background: #ff8c00;
+            pointer-events: none;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: auto; }
+        .small-btn {
+            flex: 1;
+            background: #000;
+            color: #fff;
+            border: 1px solid #333;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 12px 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .small-btn:hover { background: #fff; color: #000; border-color: #fff; }
+        #btn-download:hover { background: #ff4444; color: #fff; border-color: #ff4444; }
+
+        /* METER */
+        .chaos-meter { margin-bottom: 25px; }
+        .meter-bar-bg { width: 100%; height: 6px; background: #111; margin-top: 5px; }
+        .meter-bar-fill { height: 100%; width: 0%; transition: width 0.1s; background: #22c55e; }
+        .status-text { font-size: 10px; margin-top: 5px; color: #666; }
+
+        /* --- PANEL DERECHO --- */
+        .panel-right {
+            flex: 1;
+            background: #f4f4f4; 
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        #docCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="blackmarket.html" id="btn-back">[ X ] EXIT_TO_MARKET</a>
+
+    <div class="container">
+        <div class="panel-left">
+            <div class="header-title">ROUTR_SYS</div>
+            <div class="header-sub">SEQUENTIAL_ROUTER</div>
+
+            <div class="monitor-box">
+                <canvas id="monitorCanvas"></canvas>
+            </div>
+
+            <div class="entity-info" id="type-display">
+                STATUS: [ STANDBY ]
+            </div>
+
+            <div class="controls-area">
+                <button class="action-btn" id="btn-fill">>> START_SEQUENCE <<</button>
+
+                <div class="slider-group" id="group-complexity">
+                    <div class="slider-label">
+                        <span>ROUTE_COMPLEXITY</span>
+                        <span id="val-complexity">0</span>
+                    </div>
+                    <div class="slider-track" id="track-complexity">
+                        <div class="slider-fill" id="fill-complexity"></div>
+                        <div class="slider-thumb" id="thumb-complexity"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chaos-meter">
+                <div class="slider-label">
+                    <span>DATABASE_FILLING</span>
+                    <span id="meter-text" style="color: #22c55e;">0%</span>
+                </div>
+                <div class="meter-bar-bg">
+                    <div id="meter-fill" class="meter-bar-fill"></div>
+                </div>
+                <div class="status-text" id="status-sub">READY TO RECORD</div>
+            </div>
+
+            <div class="btn-group">
+                <button class="small-btn" id="btn-reset">RESET_ALL</button>
+                <button class="small-btn" id="btn-download">EXPORT</button>
+            </div>
+        </div>
+
+        <div class="panel-right" id="rightPanel">
+            <canvas id="docCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        /* ================= CONFIGURACIÓN ================= */
+        const CELL_SIZE = 15; 
+        const UNIFORM_PADDING = 60; // Padding igual que Vitacore
+        
+        const GLYPH_CONFIG = {
+            width: 140,   
+            height: 90,  
+            gap: 30,      
+            scale: 4,     
+            cols: 0,      
+            rows: 0,
+            totalSlots: 0
+        };
+
+        const TYPES = [
+            { name: 'VEHICLE', symbol: '■', color: '#ff8c00', speed: 1.5 },
+            { name: 'PEDESTRIAN', symbol: '●', color: '#22c55e', speed: 0.8 },
+            { name: 'DRONE', symbol: '▲', color: '#3b82f6', speed: 2.0 }
+        ];
+
+        /* ================= ESTADO ================= */
+        const state = {
+            complexity: 0.3, 
+            progressPct: 0,
+            isSequencing: false
+        };
+
+        let activeAgent = null;
+        let glyphLog = [];     
+        let animFrameId;
+        let typeCounter = 0; 
+
+        // DOM Elements
+        const monitorCanvas = document.getElementById('monitorCanvas');
+        const docCanvas = document.getElementById('docCanvas');
+        const ctxM = monitorCanvas.getContext('2d');
+        const ctxD = docCanvas.getContext('2d');
+        const rightPanel = document.getElementById('rightPanel');
+        
+        const typeDisplay = document.getElementById('type-display');
+        const meterFill = document.getElementById('meter-fill');
+        const meterText = document.getElementById('meter-text');
+        const statusSub = document.getElementById('status-sub');
+        const btnFill = document.getElementById('btn-fill');
+
+        /* ================= INICIALIZACIÓN ================= */
+        
+        function resize() {
+            // Monitor Izq: Ajustar resolución al tamaño real de la caja
+            const box = document.querySelector('.monitor-box');
+            const rect = box.getBoundingClientRect();
+            
+            monitorCanvas.width = rect.width;
+            monitorCanvas.height = rect.height;
+
+            // Canvas Der
+            const w = rightPanel.clientWidth || 1000;
+            const h = rightPanel.clientHeight || 800;
+            docCanvas.width = w;
+            docCanvas.height = h;
+
+            // Capacidad (Usando Padding Uniforme)
+            const usableW = w - (UNIFORM_PADDING * 2);
+            const usableH = h - (UNIFORM_PADDING * 2);
+
+            GLYPH_CONFIG.cols = Math.floor(usableW / (GLYPH_CONFIG.width + GLYPH_CONFIG.gap));
+            GLYPH_CONFIG.rows = Math.floor(usableH / (GLYPH_CONFIG.height + GLYPH_CONFIG.gap));
+            GLYPH_CONFIG.totalSlots = GLYPH_CONFIG.cols * GLYPH_CONFIG.rows;
+
+            // Limpiar y redibujar estáticos
+            drawGlyphBoard(); 
+        }
+
+        window.addEventListener('resize', resize);
+        window.onload = () => {
+            resize();
+            initSlider();
+            loop();
+        };
+
+        /* ================= LOGICA DE RUTAS (MANHATTAN) ================= */
+
+        function generatePath(complexity) {
+            const cols = Math.floor(monitorCanvas.width / CELL_SIZE);
+            const rows = Math.floor(monitorCanvas.height / CELL_SIZE);
+
+            let start = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+            let end = { x: Math.floor(Math.random() * cols), y: Math.floor(Math.random() * rows) };
+
+            let path = [start];
+            let current = { ...start };
+            
+            const turns = 1 + Math.floor(complexity * 8);
+            
+            let steps = [];
+            for(let i=0; i<turns; i++) {
+                const axis = Math.random() > 0.5 ? 'x' : 'y';
+                const dist = Math.floor((Math.random() - 0.5) * (cols/3)); 
+                let next = { ...current };
+                
+                // Asegurar que no se salga del grid
+                if (axis === 'x') {
+                    next.x = Math.max(0, Math.min(cols - 1, next.x + dist));
+                } else {
+                    next.y = Math.max(0, Math.min(rows - 1, next.y + dist));
+                }
+                
+                steps.push(next);
+                current = next;
+            }
+            steps.push(end);
+
+            let cursor = { ...start };
+            steps.forEach(target => {
+                while(cursor.x !== target.x) {
+                    cursor.x += Math.sign(target.x - cursor.x);
+                    path.push({...cursor});
+                }
+                while(cursor.y !== target.y) {
+                    cursor.y += Math.sign(target.y - cursor.y);
+                    path.push({...cursor});
+                }
+            });
+
+            return path;
+        }
+
+        /* ================= SECUENCIADOR ================= */
+
+        function startSequence() {
+            if (state.isSequencing) return;
+            
+            if (glyphLog.length >= GLYPH_CONFIG.totalSlots) {
+                glyphLog = [];
+                ctxD.clearRect(0,0,docCanvas.width, docCanvas.height);
+                drawGlyphBoard();
+            }
+
+            state.isSequencing = true;
+            btnFill.innerText = ">> PROCESSING... <<";
+            btnFill.classList.add("processing");
+            
+            spawnNextAgent();
+        }
+
+        function spawnNextAgent() {
+            if (glyphLog.length >= GLYPH_CONFIG.totalSlots) {
+                stopSequence();
+                return;
+            }
+
+            const type = TYPES[typeCounter % TYPES.length];
+            typeCounter++;
+
+            const path = generatePath(state.complexity);
+
+            activeAgent = {
+                type: type,
+                path: path,
+                idx: 0,
+                progress: 0,
+                drawX: path[0].x * CELL_SIZE,
+                drawY: path[0].y * CELL_SIZE
+            };
+
+            typeDisplay.innerHTML = `TRACKING: [ <span style="color:${type.color}">${type.symbol} ${type.name}</span> ]`;
+            typeDisplay.style.borderColor = type.color;
+        }
+
+        function stopSequence() {
+            state.isSequencing = false;
+            activeAgent = null;
+            btnFill.innerText = ">> START_SEQUENCE <<";
+            btnFill.classList.remove("processing");
+            typeDisplay.innerHTML = `STATUS: [ COMPLETED ]`;
+            typeDisplay.style.borderColor = "#333";
+        }
+
+        /* ================= BUCLE PRINCIPAL ================= */
+
+        function loop() {
+            if (state.isSequencing && activeAgent) {
+                const speed = 0.5 * activeAgent.type.speed; 
+                activeAgent.progress += speed;
+                
+                if (activeAgent.progress >= 1) {
+                    activeAgent.progress = 0;
+                    activeAgent.idx++;
+                    
+                    if (activeAgent.idx >= activeAgent.path.length - 1) {
+                        registerGlyph(activeAgent);
+                        spawnNextAgent();
+                    }
+                }
+            }
+
+            state.progressPct = GLYPH_CONFIG.totalSlots > 0 ? (glyphLog.length / GLYPH_CONFIG.totalSlots) * 100 : 0;
+            updateMeterUI();
+
+            drawMonitor(); 
+            if(state.isSequencing) drawGlyphBoard(); 
+
+            animFrameId = requestAnimationFrame(loop);
+        }
+
+        function registerGlyph(agent) {
+            const startX = agent.path[0].x;
+            const startY = agent.path[0].y;
+            const normPath = agent.path.map(p => ({
+                x: p.x - startX,
+                y: p.y - startY
+            }));
+
+            glyphLog.push({
+                id: `TRK-${Math.floor(Math.random()*999)}`,
+                type: agent.type,
+                path: normPath
+            });
+        }
+
+        /* ================= DIBUJADO ================= */
+
+        function drawMonitor() {
+            const W = monitorCanvas.width;
+            const H = monitorCanvas.height;
+            
+            ctxM.fillStyle = 'rgba(0, 0, 0, 0.05)'; 
+            ctxM.fillRect(0, 0, W, H);
+
+            ctxM.strokeStyle = '#111'; 
+            ctxM.lineWidth = 1;
+            ctxM.beginPath();
+            for(let x=0; x<W; x+=CELL_SIZE) { ctxM.moveTo(x,0); ctxM.lineTo(x,H); }
+            for(let y=0; y<H; y+=CELL_SIZE) { ctxM.moveTo(0,y); ctxM.lineTo(W,y); }
+            ctxM.stroke();
+
+            if (activeAgent) {
+                const curr = activeAgent.path[activeAgent.idx];
+                const next = activeAgent.path[activeAgent.idx + 1];
+                
+                if (next) {
+                    const lx = curr.x + (next.x - curr.x) * activeAgent.progress;
+                    const ly = curr.y + (next.y - curr.y) * activeAgent.progress;
+                    
+                    const px = lx * CELL_SIZE + CELL_SIZE/2;
+                    const py = ly * CELL_SIZE + CELL_SIZE/2;
+
+                    ctxM.fillStyle = activeAgent.type.color;
+                    ctxM.shadowColor = activeAgent.type.color;
+                    ctxM.shadowBlur = 10;
+                    ctxM.beginPath();
+                    ctxM.arc(px, py, 4, 0, Math.PI*2);
+                    ctxM.fill();
+                    ctxM.shadowBlur = 0;
+
+                    ctxM.strokeStyle = activeAgent.type.color;
+                    ctxM.lineWidth = 2;
+                    ctxM.beginPath();
+                    const startTrace = Math.max(0, activeAgent.idx - 20);
+                    for(let i=startTrace; i<=activeAgent.idx; i++) {
+                        const p = activeAgent.path[i];
+                        const x = p.x * CELL_SIZE + CELL_SIZE/2;
+                        const y = p.y * CELL_SIZE + CELL_SIZE/2;
+                        if(i===startTrace) ctxM.moveTo(x, y); else ctxM.lineTo(x, y);
+                    }
+                    ctxM.lineTo(px, py);
+                    ctxM.stroke();
+                }
+            }
+        }
+
+        function drawGlyphBoard() {
+            const W = docCanvas.width;
+            const H = docCanvas.height;
+
+            ctxD.fillStyle = '#f4f4f4';
+            ctxD.fillRect(0, 0, W, H);
+
+            // StartX y StartY respetando el padding uniforme
+            const startX = UNIFORM_PADDING;
+            const startY = UNIFORM_PADDING;
+
+            glyphLog.forEach((glyph, index) => {
+                const col = index % GLYPH_CONFIG.cols;
+                const row = Math.floor(index / GLYPH_CONFIG.cols);
+                
+                // Calculamos el centro de la celda en base al padding
+                const cx = startX + col * (GLYPH_CONFIG.width + GLYPH_CONFIG.gap) + GLYPH_CONFIG.width/2;
+                const cy = startY + row * (GLYPH_CONFIG.height + GLYPH_CONFIG.gap) + GLYPH_CONFIG.height/2;
+
+                // ID
+                ctxD.fillStyle = '#aaa';
+                ctxD.font = '9px JetBrains Mono';
+                ctxD.fillText(glyph.id, cx - GLYPH_CONFIG.width/2, cy + GLYPH_CONFIG.height/2 + 10);
+
+                // GLIFO
+                ctxD.strokeStyle = '#111'; 
+                ctxD.lineWidth = 2;
+                ctxD.lineCap = 'round';
+                ctxD.lineJoin = 'round';
+                
+                ctxD.beginPath();
+                glyph.path.forEach((p, i) => {
+                    const px = cx + p.x * GLYPH_CONFIG.scale;
+                    const py = cy + p.y * GLYPH_CONFIG.scale;
+                    if(i===0) ctxD.moveTo(px, py); else ctxD.lineTo(px, py);
+                });
+                ctxD.stroke();
+
+                // Punto final
+                const last = glyph.path[glyph.path.length-1];
+                ctxD.fillStyle = glyph.type.color;
+                const lx = cx + last.x * GLYPH_CONFIG.scale;
+                const ly = cy + last.y * GLYPH_CONFIG.scale;
+                ctxD.fillRect(lx-2, ly-2, 4, 4);
+            });
+        }
+
+        function updateMeterUI() {
+            meterFill.style.width = `${state.progressPct}%`;
+            let color = '#22c55e'; let txt = "RECORDING"; let sub = "STATUS: ACTIVE";
+            
+            if(!state.isSequencing && state.progressPct === 0) {
+                txt = "EMPTY"; sub = "WAITING..."; color="#444";
+            }
+            if(state.progressPct >= 100) {
+                color = '#ef4444'; txt = "FULL"; sub = "ACTION: EXPORT/RESET";
+            }
+            
+            meterFill.style.backgroundColor = color;
+            meterText.style.color = color;
+            meterText.innerText = Math.floor(state.progressPct) + "%";
+            statusSub.style.color = "#666";
+            statusSub.innerText = sub;
+        }
+
+        /* ================= INTERACCIÓN UI ================= */
+
+        function initSlider() {
+            const track = document.getElementById('track-complexity');
+            const fill = document.getElementById('fill-complexity');
+            const thumb = document.getElementById('thumb-complexity');
+            const valLabel = document.getElementById('val-complexity');
+
+            const defaultVal = 0.3;
+            state.complexity = defaultVal;
+            fill.style.width = '30%';
+            thumb.style.left = '30%';
+            valLabel.innerText = '0.30';
+
+            const update = (clientX) => {
+                const rect = track.getBoundingClientRect();
+                let x = (clientX - rect.left) / rect.width;
+                x = Math.max(0, Math.min(1, x));
+                state.complexity = x;
+                fill.style.width = (x*100) + '%';
+                thumb.style.left = (x*100) + '%';
+                valLabel.innerText = x.toFixed(2);
+            };
+
+            track.addEventListener('mousedown', (e) => {
+                update(e.clientX);
+                const move = (ev) => update(ev.clientX);
+                const up = () => {
+                    window.removeEventListener('mousemove', move);
+                    window.removeEventListener('mouseup', up);
+                };
+                window.addEventListener('mousemove', move);
+                window.addEventListener('mouseup', up);
+            });
+        }
+
+        /* ================= BOTONES ================= */
+        
+        document.getElementById('btn-fill').addEventListener('click', () => {
+            startSequence();
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            state.isSequencing = false;
+            activeAgent = null;
+            glyphLog = [];
+            ctxM.fillStyle = '#000'; ctxM.fillRect(0,0,monitorCanvas.width, monitorCanvas.height); 
+            drawGlyphBoard();
+            stopSequence();
+            btnFill.innerText = ">> START_SEQUENCE <<";
+            btnFill.classList.remove("processing");
+        });
+
+        document.getElementById('btn-download').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `GLYPHS_SEQ_${Date.now()}.png`;
+            link.href = docCanvas.toDataURL('image/png');
+            link.click();
+        });
+
+    </script>
+</body>
+</html>

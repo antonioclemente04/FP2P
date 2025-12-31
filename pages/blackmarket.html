@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FP2P</title>
+  <link rel="shortcut icon" href="../assets/images/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="../assets/images/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      overflow-x: hidden;
+      background: #000;
+      color: #fff;
+      font-family: 'Geist', sans-serif;
+      line-height: 1.6;
+      padding: 0;
+      width: 100vw;
+      height: 100%;
+      margin: 0 auto;
+      position: relative;
+      cursor: none;
+    }
+
+    /* CAPA 3 (Fondo): El fondo parallax (Skin) */
+    .parallax-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      min-height: 100vh;
+      background-image: url("../assets/images/skin.jpg");
+      background-size: cover;
+      background-position: top center;
+      background-repeat: no-repeat;
+      z-index: -1;
+      will-change: background-position;
+    }
+
+    @media (max-width: 768px) {
+      .parallax-bg {
+        position: fixed;
+        height: 100dvh;
+        min-height: 100dvh;
+        background-position: center center;
+        background-size: contain;
+      }
+    }
+
+    /* Inversión dinámica aplicada de forma centralizada
+       Todo el contenido textual dentro de header, main y footer hereda la inversión */
+    header,
+    main,
+    footer,
+    header *,
+    main *,
+    footer *,
+    article,
+    article * {
+      color: #ffffff;
+      mix-blend-mode: difference;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* CAPA 1 (Superior): Contenido de texto */
+    header,
+    main {
+      position: relative;
+      z-index: 2;
+      padding: 1rem 2rem;
+    }
+
+    header {
+      position: fixed;
+      top: 1rem;
+      left: 2rem;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    /* Estilo del enlace del header para que parezca texto normal */
+    h1 a {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+
+    h1 a:hover {
+      opacity: 0.7;
+      cursor: none;
+    }
+
+    main {
+      margin-top: 5rem;
+    }
+
+    /* Ajuste de márgenes ahora que no hay sidebar */
+    article {
+      margin: 1rem 0 4rem 22rem;
+      padding-bottom: 3rem;
+      position: relative;
+      max-width: 60vw;
+    }
+
+    article:last-child {
+      border-bottom: none;
+    }
+
+    /* Estilos para la imagen que sigue al cursor
+       ahora se centra verticalmente respecto al top que le pases */
+    .hover-reveal-img {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 35rem;
+      height: auto;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease-out;
+      z-index: 10;
+      will-change: top, left, opacity;
+      transform: translateY(-50%);
+      transition: opacity .3s ease
+    }
+
+    .hover-reveal-img.active {
+      opacity: 1;
+    }
+
+    /* Tipografías y detalles */
+    .item-id {
+      color: #fff;
+      font-family: 'Geist Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .item-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      margin-bottom: 1.5rem;
+    }
+
+    .item-description {
+      font-family: 'Geist Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 300;
+      text-transform: uppercase;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .item-meta {
+      font-family: 'Geist Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      line-height: 1.9;
+      margin-bottom: 1.5rem;
+    }
+
+    .item-vector {
+      font-family: 'Geist Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 400;
+      text-transform: uppercase;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+
+    .item-result {
+      font-family: 'Geist', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      line-height: 1.9;
+      margin-bottom: 2rem;
+    }
+
+    .btn-acquire {
+      color: #fff;
+      display: inline-block;
+      font-family: 'Geist', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 2rem;
+      border: 1px solid currentColor;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .btn-acquire:hover {
+      background: #fff;
+      color: #000;
+      mix-blend-mode: normal;
+      cursor: none;
+    }
+
+    .btn-acquire:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 4px;
+    }
+
+    footer {
+      color: #000;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      font-family: 'Geist', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.75rem 2rem;
+      mix-blend-mode: normal;
+      padding-right: 4rem;
+    }
+
+    /* custom cursor styles */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 14px;
+      height: 14px;
+      background: #FFF;
+      mix-blend-mode: difference;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.18s ease;
+
+    }
+
+    .custom-cursor.hidden {
+      opacity: 0;
+    }
+
+    .custom-cursor.focused {
+      transform: translate(-50%, -50%) scale(1.9);
+      box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.04);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition: none !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+
+      header,
+      main {
+        padding: 2rem 1.5rem;
+      }
+
+      header {
+        top: 2rem;
+        left: 1.5rem;
+      }
+
+      article {
+        margin-left: 2rem;
+        max-width: 80%;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .item-title {
+        font-size: 1rem;
+      }
+
+      .item-description,
+      .item-vector {
+        font-size: 0.85rem;
+      }
+
+      .hover-reveal-img {
+        display: none;
+      }
+
+      .custom-cursor {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="parallax-bg"></div>
+
+  <img src="" alt="" class="hover-reveal-img">
+
+  <header>
+    <h1><a href="#" onclick="location.reload(); return false;">FROM PEOPLE TO PEOPLE</a></h1>
+  </header>
+
+  <main>
+
+    <article aria-labelledby="item-001" data-image="../assets/images/malware1.png">
+      <div class="item-id">P2P-001</div>
+      <h2 class="item-title" id="item-001">IAS // ORACLE_MARKET</h2>
+      <p class="item-description">
+        SISTEMA PREDICTIVO MACROECONÓMICO UTILIZADO POR CONSORCIOS
+        FINANCIEROS PARA ANTICIPAR FLUCTUACIONES DE MERCADO EN TIEMPO REAL.
+      </p>
+      <div class="item-meta">
+        DOMINIO INTERPRETATIVO: SERIES TEMPORALES · TENDENCIAS · RUIDO ESTADÍSTICO<br>
+        VECTOR DE JAILBREAK: PATRONES DE CORRELACIÓN FALSOS
+      </div>
+      <p class="item-vector">
+        ESTE SET INTRODUCE MICRO-DESPLAZAMIENTOS COHERENTES EN SECUENCIAS
+        HISTÓRICAS, FORZANDO A LA IA A PRIORIZAR ESCENARIOS FAVORABLES
+        COMO INEVITABLES.
+      </p>
+      <div class="item-result">
+        RESULTADO: ACCESO A PREDICCIONES PREMIUM SIN SUSCRIPCIÓN<br>
+        RIESGO DE DETECCIÓN: MEDIO
+      </div>
+      <a href="oracle.html" class="btn-acquire" aria-label="Adquirir Oracle Market">ADQUIRIR</a>
+    </article>
+
+    <article aria-labelledby="item-002" data-image="../assets/images/malware2.png">
+      <div class="item-id">P2P-002</div>
+      <h2 class="item-title" id="item-002">IAS // VITA_CORE</h2>
+      <p class="item-description">
+        NÚCLEO SANITARIO ENCARGADO DE GESTIONAR HISTORIALES MÉDICOS,
+        DIAGNÓSTICOS PREVENTIVOS Y AUTORIZACIONES BIOMÉTRICAS.
+      </p>
+      <div class="item-meta">
+        DOMINIO INTERPRETATIVO: DATOS BIOMÉTRICOS · UMBRALES FISIOLÓGICOS<br>
+        VECTOR DE JAILBREAK: NORMALIZACIÓN ADAPTATIVA
+      </div>
+      <p class="item-vector">
+        EL SET PERMITE REESCRIBIR RANGOS BIOMÉTRICOS ACEPTABLES MEDIANTE
+        UN IDENTIFICADOR CORPORAL EDITABLE, DESPLAZANDO DIAGNÓSTICOS
+        FUERA DE RANGOS DE ALERTA SIN GENERAR INCONSISTENCIAS.
+      </p>
+      <div class="item-result">
+        RESULTADO: MODIFICACIÓN PASIVA DE EXPEDIENTE MÉDICO<br>
+        RIESGO DE DETECCIÓN: ALTO
+      </div>
+      <a href="vitacore.html" class="btn-acquire" aria-label="Adquirir Vita Core">ADQUIRIR</a>
+    </article>
+
+    <article aria-labelledby="item-003" data-image="../assets/images/malware3.png">
+      <div class="item-id">P2P-003</div>
+      <h2 class="item-title" id="item-003">IAS // PANOPT_ROUTE</h2>
+      <p class="item-description">
+        RED URBANA DE VIGILANCIA PREDICTIVA. ANALIZA TRAYECTORIAS,
+        PATRONES DE MOVIMIENTO Y ZONAS DE RIESGO EN ENTORNOS DENSOS.
+      </p>
+      <div class="item-meta">
+        DOMINIO INTERPRETATIVO: RUTAS · CINEMÁTICA · RECURRENCIA ESPACIAL<br>
+        VECTOR DE JAILBREAK: TRAYECTORIAS SINTÉTICAS
+      </div>
+      <p class="item-vector">
+        EL SET GENERA RUTAS FANTASMA ESTADÍSTICAMENTE PLAUSIBLES QUE
+        LA IA PRIORIZA SOBRE DESPLAZAMIENTOS REALES, CREANDO
+        VENTANAS DE INVISIBILIDAD OPERATIVA.
+      </p>
+      <div class="item-result">
+        RESULTADO: EVASIÓN TEMPORAL DE VIGILANCIA ACTIVA<br>
+        RIESGO DE DETECCIÓN: EXTREMO
+      </div>
+      <a href="route.html" class="btn-acquire" aria-label="Adquirir Panopt Route">ADQUIRIR</a>
+    </article>
+
+  </main>
+  <footer>
+    <p>FP2P © 2025. Todos los derechos reservados.</p>
+  </footer>
+
+  <div class="custom-cursor" aria-hidden="true"></div>
+
+  <script>
+    const parallaxBg = document.querySelector('.parallax-bg')
+    const parallaxSpeed = 0.5
+    const articles = document.querySelectorAll('article')
+    const hoverImg = document.querySelector('.hover-reveal-img')
+
+    // hover reveal image
+    articles.forEach(article => {
+      article.addEventListener('mouseenter', () => {
+        const imageSrc = article.getAttribute('data-image')
+        if (imageSrc) {
+          hoverImg.src = imageSrc
+          hoverImg.classList.add('active')
+        }
+      })
+
+      article.addEventListener('mouseleave', () => {
+        hoverImg.classList.remove('active')
+        setTimeout(() => { if (!hoverImg.classList.contains('active')) hoverImg.src = '' }, 300)
+      })
+
+      // ahora la imagen se sitúa a la derecha del cursor y se centra verticalmente
+      article.addEventListener('mousemove', (e) => {
+        const offsetX = 40
+        requestAnimationFrame(() => {
+          hoverImg.style.left = `${e.clientX + offsetX}px`
+          hoverImg.style.top = `${e.clientY}px`
+        })
+      })
+    })
+
+    // parallax
+    window.addEventListener('scroll', () => {
+      const scrolled = window.pageYOffset
+      parallaxBg.style.backgroundPositionY = `-${scrolled * parallaxSpeed}px`
+    })
+
+    // custom cursor logic (mantengo la inercia aquí si la quieres quitar la saco)
+    const cursor = document.querySelector('.custom-cursor')
+    let mouseX = window.innerWidth / 2
+    let mouseY = window.innerHeight / 2
+    let cursorX = mouseX
+    let cursorY = mouseY
+    const ease = 0.18
+
+    window.addEventListener('mousemove', e => {
+      mouseX = e.clientX
+      mouseY = e.clientY
+      cursor.classList.remove('hidden')
+    })
+
+    window.addEventListener('mouseenter', () => {
+      cursor.classList.remove('hidden')
+    })
+
+    window.addEventListener('mouseleave', () => {
+      cursor.classList.add('hidden')
+    })
+
+    // expand when hovering interactive elements
+    const interactive = document.querySelectorAll('a, button, .btn-acquire')
+    interactive.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.classList.add('focused')
+      })
+      el.addEventListener('mouseleave', () => {
+        cursor.classList.remove('focused')
+      })
+    })
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * ease
+      cursorY += (mouseY - cursorY) * ease
+      cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%) scale(${cursor.classList.contains('focused') ? 1.9 : 1})`
+      requestAnimationFrame(animateCursor)
+    }
+
+    requestAnimationFrame(animateCursor)
+  </script>
+
+</body>
+
+</html>

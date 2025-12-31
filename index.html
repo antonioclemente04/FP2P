@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AL / GOV</title>
+  <link rel="shortcut icon" href="assets/images/favicon.png" type="image/x-icon">
+  <link rel="apple-touch-icon" href="assets/images/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: default;
+    }
+
+    body {
+      font-family: 'Geist', sans-serif;
+      background: rgb(236, 236, 236);
+      color: black;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* SPLASH SCREEN */
+    .splash {
+      background: rgb(236, 236, 236);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 0.3s ease-out;
+    }
+
+    .splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash video {
+      width: 20rem;
+      height: 20rem;
+      object-fit: contain;
+    }
+
+    /* HEADER */
+    .topbar {
+      padding: 1.5rem 2rem;
+      text-align: center;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Geist', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    /* --- ESCENARIO CENTRAL --- */
+    .center-stage {
+      position: relative;
+      width: 35rem;
+      height: 35rem;
+      /* CLAVE: Esto aísla el contexto de apilamiento para que el mix-blend-mode funcione dentro */
+      isolation: isolate; 
+      background-color: #000; /* Fondo negro de seguridad detrás del video */
+    }
+
+    /* VIDEO DE FONDO */
+    .bg-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* Rellena el cuadrado sin bandas negras */
+      /* El video debe estar abajo en el orden de apilamiento natural */
+      pointer-events: none;
+    }
+
+    /* CAPA INTERACTIVA (CONTENIDO SUPERIOR) */
+    .interactive-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* Sin z-index explícito alto para no romper el blending, 
+         el orden HTML (debajo del video) ya lo pone encima */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* FIGURES GRID */
+    .figures-container {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-template-rows: repeat(2, 60px);
+      gap: 20px;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      /* Aseguramos que las figuras se vean normales */
+      mix-blend-mode: normal; 
+    }
+
+    .interactive-layer:hover .figures-container {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ESTILOS DE FIGURAS */
+    .figure { position: relative; width: 60px; height: 60px; }
+    .solid { position: absolute; width: 50px; height: 50px; background-color: black; }
+    .solid-center { top: 5px; left: 5px; }
+    .solid-top-left { top: 0; left: 0; }
+    .solid-top-right { top: 0; right: 0; }
+    .border-left { position: absolute; left: 0; top: 0; width: 8px; height: 58px; border: 1px solid black; }
+    .border-right { position: absolute; right: 0; top: 0; width: 8px; height: 58px; border: 1px solid black; }
+    .border-right-tiny-top { position: absolute; right: 0; top: 0; width: 8px; height: 12px; border: 1px solid black; }
+    .border-right-tiny-bottom { position: absolute; right: 0; bottom: 0; width: 8px; height: 12px; border: 1px solid black; }
+    .border-left-tiny-bottom { position: absolute; left: 0; bottom: 0; width: 8px; height: 12px; border: 1px solid black; }
+    .corner-top-left, .corner-top-right, .corner-bottom-left, .corner-bottom-right { position: absolute; width: 8px; height: 8px; border: 1px solid black; }
+    .corner-top-left { top: 0; left: 0; }
+    .corner-top-right { top: 0; right: 0; }
+    .corner-bottom-left { bottom: 0; left: 0; }
+    .corner-bottom-right { bottom: 0; right: 0; }
+
+    /* TEXTO OCULTO */
+    .hidden-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      
+      width: 80%;
+      text-align: center;
+      
+      font-size: 1rem;
+      font-family: 'Geist', sans-serif;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+      
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      
+      /* PROPIEDADES DE MEZCLA */
+      color: #ffffff; /* Blanco puro para máxima inversión */
+      mix-blend-mode: difference; /* El efecto mágico */
+    }
+
+    .interactive-layer:hover .hidden-text {
+      opacity: 1;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 1.5rem 2rem;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      z-index: 100;
+      gap: 2rem;
+    }
+
+    footer p {
+      color: black;
+      justify-content: left;
+      padding-right: 2rem;
+      border-right: 1px solid black;
+    }
+
+    footer img {
+      width: 50px;
+      height: 50px;
+    }
+
+    /* GLITCH BLOCKS */
+    .glitch-link {
+      position: fixed;
+      bottom: 2rem;
+      right: 0;
+      display: flex;
+      z-index: 200;
+      text-decoration: none;
+      padding: 8px;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      transform: translateY(6px);
+    }
+
+    .glitch-link.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+      cursor: pointer;
+    }
+
+    .glitch-block {
+      width: 8px;
+      height: 8px;
+      background: black;
+      display: inline-block;
+      animation: glitch 0.1s infinite;
+      box-shadow: 0 0 0 1px rgb(255, 0, 0);
+    }
+
+    .glitch-block:nth-child(1) { animation-delay: 0s; }
+    .glitch-block:nth-child(2) { animation-delay: 0.1s; }
+    .glitch-block:nth-child(3) { animation-delay: 0.05s; }
+    .glitch-block:nth-child(4) { animation-delay: 0.15s; }
+    .glitch-block:nth-child(5) { animation-delay: 0.08s; }
+    .glitch-block:nth-child(6) { animation-delay: 0.12s; }
+
+    @keyframes glitch {
+      0%, 100% { transform: translate(0, 0); opacity: 1; }
+      10% { transform: translate(-2px, 1px); opacity: 0.8; }
+      20% { transform: translate(2px, -1px); opacity: 1; }
+      30% { transform: translate(-1px, -2px); opacity: 0.9; }
+      40% { transform: translate(1px, 2px); opacity: 1; }
+      50% { transform: translate(-2px, -1px); opacity: 0.85; }
+      60% { transform: translate(2px, 1px); opacity: 1; }
+      70% { transform: translate(-1px, 2px); opacity: 0.9; }
+      80% { transform: translate(1px, -2px); opacity: 1; }
+      90% { transform: translate(-2px, 2px); opacity: 0.95; }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      .center-stage { width: 25rem; height: 25rem; }
+      .figures-container { grid-template-columns: repeat(5, 50px); grid-template-rows: repeat(2, 50px); gap: 15px; }
+      .figure { width: 50px; height: 50px; }
+      .solid { width: 42px; height: 42px; }
+      .hidden-text { font-size: 0.65rem; }
+      .glitch-link { bottom: 1rem; right: 0.6rem; padding: 6px; }
+      .glitch-block { width: 6px; height: 6px; }
+    }
+
+    @media (max-width: 480px) {
+      .splash video { width: 15rem; height: 15rem; }
+      .center-stage { width: 18rem; height: 18rem; }
+      .figures-container { grid-template-columns: repeat(5, 40px); grid-template-rows: repeat(2, 40px); gap: 12px; }
+      .figure { width: 40px; height: 40px; }
+      .solid { width: 34px; height: 34px; transform: scale(0.85); }
+      .hidden-text { font-size: 0.6rem; }
+      .logo { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <section class="splash" id="splash">
+    <video src="assets/images/ai-logo.mp4" autoplay loop muted playsinline></video>
+  </section>
+
+  <a href="pages/blackmarket.html" class="glitch-link" id="glitchLink" aria-hidden="true" tabindex="-1">
+    <span class="glitch-block"></span>
+  </a>
+
+  <header class="topbar">
+    <div class="logo">AL / GOV</div>
+  </header>
+
+  <main class="container">
+    <section class="center-stage">
+      
+      <video class="bg-video" src="assets/images/flower.mp4" autoplay loop muted playsinline></video>
+
+      <div class="interactive-layer">
+        
+        <div class="figures-container">
+          <div class="figure">
+            <div class="border-left"></div>
+            <div class="solid solid-top-right"></div>
+          </div>
+          <div class="figure">
+            <div class="border-right-tiny-top"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+          <div class="figure">
+            <div class="border-left"></div>
+            <div class="solid solid-top-right"></div>
+          </div>
+          <div class="figure">
+            <div class="border-right"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+          <div class="figure">
+            <div class="border-left-tiny-bottom"></div>
+            <div class="border-right-tiny-bottom"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+
+          <div class="figure">
+            <div class="corner-top-left"></div>
+            <div class="corner-top-right"></div>
+            <div class="corner-bottom-left"></div>
+            <div class="corner-bottom-right"></div>
+            <div class="solid solid-center"></div>
+          </div>
+          <div class="figure">
+            <div class="border-left"></div>
+            <div class="solid solid-top-right"></div>
+          </div>
+          <div class="figure">
+            <div class="border-right-tiny-top"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+          <div class="figure">
+            <div class="border-right"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+          <div class="figure">
+            <div class="border-left-tiny-bottom"></div>
+            <div class="border-right-tiny-bottom"></div>
+            <div class="solid solid-top-left"></div>
+          </div>
+        </div>
+
+        <div class="hidden-text">
+          <p>La migración lingüística completa del sistema a Qyma será realizada el 02.05.2079</p>
+          <p>Marcará el surgimiento completo de la era comunicativa tokenizada y el fin del alfabeto humano.</p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>AUTORIDAD LINGÜÍSTICA<br>GOBIERNO DE ESPAÑA</p>
+    <img src="assets/images/escudo.png" alt="Escudo DSL / GOV ESP">
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const splash = document.getElementById('splash')
+      const body = document.body
+      const shown = localStorage.getItem('splashShown')
+      const glitch = document.getElementById('glitchLink')
+      const DURATION = 6000
+
+      function revealGlitch() {
+        if (glitch) glitch.classList.add('show')
+      }
+
+      if (shown) {
+        splash.style.display = 'none'
+        body.style.overflow = 'auto'
+        revealGlitch()
+        return
+      }
+
+      body.style.overflow = 'hidden'
+      setTimeout(function () {
+        splash.classList.add('hidden')
+        splash.addEventListener('transitionend', function () {
+          splash.style.display = 'none'
+          body.style.overflow = 'auto'
+          revealGlitch()
+        }, { once: true })
+        localStorage.setItem('splashShown', '1')
+      }, DURATION)
+    })
+  </script>
+</body>
+
+</html>
