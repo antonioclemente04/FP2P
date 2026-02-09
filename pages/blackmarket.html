@@ -32,6 +32,8 @@
     body {
       height: 100%;
       width: 100%;
+      /* Base de fuente para consistencia */
+      font-size: 16px; 
     }
 
     body {
@@ -39,8 +41,7 @@
       background: var(--color-bg);
       color: var(--color-text);
       font-family: var(--font-main);
-      line-height: 1.6;
-      /* Ocultamos cursor nativo solo en desktop */
+      line-height: 1.5;
       cursor: none;
     }
 
@@ -50,48 +51,19 @@
       top: 0;
       left: 0;
       width: 100%;
-      height: 100vh;
-      min-height: 100%;
+      height: 120vh; /* 20% extra para buffer */
       background-image: url("../assets/images/skin.jpg");
       background-size: cover;
-      background-position: center;
+      background-position: center top;
       background-repeat: no-repeat;
-      background-attachment: fixed;
       z-index: -1;
-      background-color: #000; /* Fondo de respaldo */
-    }
-
-    @media (max-width: 1024px) {
-      .parallax-bg {
-        background-attachment: scroll;
-        background-position: center center;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .parallax-bg {
-        height: 100%;
-        min-height: 100vh;
-        -webkit-overflow-scrolling: touch;
-      }
-      
-      html, body {
-        height: 100%;
-        overflow-x: hidden;
-      }
-      
-      body {
-        position: relative;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
+      will-change: transform;
     }
 
     /* === LAYOUT GENERAL === */
-    /* Usamos Grid para manejar la relación Header vs Main */
     .layout-wrapper {
       display: grid;
-      grid-template-columns: 300px 1fr; /* Sidebar fija | Contenido fluido */
+      grid-template-columns: 300px 1fr;
       min-height: 100vh;
       position: relative;
       z-index: 2;
@@ -115,10 +87,12 @@
     }
 
     h1 {
-      font-size: clamp(1rem, 2vw, 1.4rem); /* Tipografía fluida */
+      /* Texto fluido: Mínimo 16px, Ideal 2.5% pantalla, Máximo 24px */
+      font-size: clamp(1rem, 2.5vw, 1.5rem); 
       font-weight: 700;
       letter-spacing: 0.02em;
       text-transform: uppercase;
+      line-height: 1.2;
     }
 
     h1 a {
@@ -139,11 +113,11 @@
     }
 
     article {
-      margin-bottom: 6rem;
-      padding-bottom: 3rem;
+      margin-bottom: 8rem; /* Más aire entre artículos */
+      padding-bottom: 4rem;
       position: relative;
       border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      max-width: 90%;
+      max-width: 95%;
     }
 
     article:last-child {
@@ -151,53 +125,56 @@
       margin-bottom: 0;
     }
 
-    /* === TIPOGRAFÍA DE ARTÍCULOS === */
+    /* === TIPOGRAFÍA DE ARTÍCULOS (MEJORADA) === */
+    
     .item-id {
       font-family: var(--font-mono);
-      font-size: clamp(0.6rem, 1.5vw, 0.75rem);
+      font-size: 0.85rem; 
       letter-spacing: 0.1em;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
       opacity: 0.8;
+      font-weight: 500;
     }
 
     .item-title {
-      font-size: clamp(1.2rem, 4vw, 2rem);
-      font-weight: 600;
+      /* TÍTULOS RESPONSIVE: De 24px a 56px según la pantalla */
+      font-size: clamp(1.5rem, 5vw, 3.5rem);
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.02em;
-      margin-bottom: 1rem;
-      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      line-height: 0.95; /* Título apretado para impacto */
+      word-break: break-word; /* Evita que palabras largas rompan el móvil */
     }
 
     .item-description {
       font-family: var(--font-mono);
-      font-size: clamp(0.75rem, 1.8vw, 0.9rem);
+      /* TEXTO CUERPO: Nunca menos de 1rem (16px), crece un poco en pantallas grandes */
+      font-size: clamp(1rem, 1.2vw, 1.25rem);
       font-weight: 300;
       text-transform: uppercase;
-      line-height: 1.7;
-      margin-bottom: 1.5rem;
-      max-width: 100%;
-      
-      @media (max-width: 480px) {
-        font-size: 0.8rem;
-        line-height: 1.6;
-      }
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      max-width: 65ch;
     }
 
+    /* Información técnica */
     .item-meta, .item-vector, .item-result {
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      /* Texto técnico: legible en móvil (14px) y sutil en desktop */
+      font-size: clamp(0.85rem, 1vw, 1rem); 
       text-transform: uppercase;
-      margin-bottom: 1rem;
-      padding-left: 1rem;
+      margin-bottom: 1.2rem;
+      padding-left: 1.5rem;
       border-left: 1px solid rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
     }
 
     .item-result {
       font-family: var(--font-main);
       font-weight: 700;
-      margin-top: 1.5rem;
-      margin-bottom: 2.5rem;
+      margin-top: 2rem;
+      margin-bottom: 3rem;
       border-left: none;
       padding-left: 0;
     }
@@ -207,11 +184,14 @@
       color: #fff;
       display: inline-block;
       font-family: var(--font-main);
-      font-size: 0.75rem;
+      
+      /* Botón que escala ligeramente */
+      font-size: clamp(0.85rem, 1.5vw, 1rem);
+      
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      padding: 1rem 2.5rem;
+      padding: 1.2rem 3rem;
       border: 1px solid currentColor;
       text-decoration: none;
       transition: all 0.3s ease;
@@ -221,15 +201,15 @@
     .btn-acquire:hover {
       background: #fff;
       color: #000;
-      mix-blend-mode: normal; /* Rompe la diferencia para destacar */
+      mix-blend-mode: normal;
     }
 
     /* === FOOTER === */
     footer {
       width: 100%;
       text-align: center;
-      padding: 2rem;
-      font-size: 0.7rem;
+      padding: 4rem 2rem 2rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       mix-blend-mode: difference;
@@ -242,7 +222,7 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: clamp(250px, 30vw, 500px); /* Tamaño fluido de imagen */
+      width: clamp(250px, 35vw, 600px);
       height: auto;
       pointer-events: none;
       opacity: 0;
@@ -269,12 +249,12 @@
       z-index: 9999;
       transform: translate(-50%, -50%);
       transition: width 0.3s, height 0.3s, opacity 0.2s; 
-      border-radius: 50%; /* Opcional: si quieres círculo */
+      border-radius: 50%;
     }
 
     .custom-cursor.focused {
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       opacity: 0.5;
       background: transparent;
       border: 2px solid #fff;
@@ -284,112 +264,71 @@
       opacity: 0;
     }
 
-    /* === MEDIA QUERIES (RESPONSIVE) === */
+    /* === MEDIA QUERIES === */
     
-    /* Tablets y pantallas medianas (menos de 1024px) */
     @media (max-width: 1024px) {
       .layout-wrapper {
-        grid-template-columns: 1fr; /* Una sola columna */
+        grid-template-columns: 1fr;
       }
 
       header {
         position: relative;
         height: auto;
-        padding: 1.5rem 1.5rem 0;
-        margin-bottom: 1rem;
+        padding: 2rem 2rem 0 2rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 2rem;
       }
 
       main {
-        padding: 0 1.5rem 3rem;
+        padding: 0 2rem 4rem 2rem;
         margin-top: 0;
       }
       
       article {
-        margin: 0 auto 3rem;
+        margin: 0 auto 5rem auto;
         max-width: 100%;
-        padding-bottom: 2rem;
-      }
-      
-      .btn-acquire {
-        width: 100%;
-        text-align: center;
-        padding: 0.8rem;
       }
     }
     
-    @media (max-width: 480px) {
-      header {
-        padding: 1rem 1rem 0;
-      }
-      
-      main {
-        padding: 0 1rem 2rem;
-      }
-      
-      article {
-        margin-bottom: 2.5rem;
-        padding-bottom: 1.5rem;
-      }
-      
-      .item-title {
-        font-size: 1.4rem;
-        line-height: 1.3;
-      }
-      
-      .item-description,
-      .item-meta,
-      .item-vector {
-        font-size: 0.8rem;
-        line-height: 1.6;
-      }
-    }
-
-    /* Móviles (menos de 768px) */
     @media (max-width: 768px) {
       body {
-        cursor: auto; /* Restaurar cursor nativo */
+        cursor: auto; 
       }
 
       .parallax-bg {
-        /* En móviles el fixed a veces da saltos, 'scroll' es más seguro, 
-           o mantenemos fixed si el soporte es bueno */
+        top: 0;
+        height: 100vh;
         background-attachment: scroll; 
+        transform: none !important;
       }
 
-      /* Desactivar elementos puramente de mouse */
       .custom-cursor,
       .hover-reveal-img {
         display: none !important;
       }
 
+      /* Ajustes finos para móvil */
       header {
-        padding: 1.5rem;
+        padding: 1.5rem 1.5rem 1.5rem;
       }
 
       main {
         padding: 0 1.5rem 3rem 1.5rem;
       }
 
-      .item-title {
-        font-size: 1.5rem;
-      }
-
-      .item-description, .item-meta {
-        font-size: 0.8rem;
+      .item-meta, .item-vector, .item-result {
+        padding-left: 1rem; /* Reducir padding en móvil */
       }
 
       .btn-acquire {
-        width: 100%; /* Botón ancho completo en móvil para mejor tap */
+        width: 100%;
         text-align: center;
         padding: 1rem;
-      }
-
-      footer {
-        padding-bottom: 2rem;
+        display: block; /* Botón bloque completo */
       }
     }
 
-    /* Preferencias de movimiento reducido */
     @media (prefers-reduced-motion: reduce) {
       * {
         animation: none !important;
@@ -486,74 +425,72 @@
   <div class="custom-cursor" aria-hidden="true"></div>
 
   <script>
-    // Detección de dispositivo táctil para desactivar lógica pesada
+    // Detección de dispositivo táctil
     const isTouchDevice = window.matchMedia("(hover: none)").matches;
 
     // === PARALLAX BACKGROUND ===
     const parallaxBg = document.querySelector('.parallax-bg');
     
-    // Solo activamos parallax por JS si no es móvil para ahorrar batería
     if (!isTouchDevice) {
       window.addEventListener('scroll', () => {
-        const scrolled = window.scrollY;
-        // RequestAnimationFrame para suavidad
-        requestAnimationFrame(() => {
-          parallaxBg.style.transform = `translateY(${scrolled * 0.5}px)`;
-        });
+        // Altura total "scrolleable"
+        const limit = document.body.offsetHeight - window.innerHeight;
+        const scrollTop = window.scrollY;
+
+        if (limit > 0) {
+            // Porcentaje del 0 al 1
+            const percent = scrollTop / limit;
+            // Movimiento máximo de 20vh (negativo para subir)
+            const moveAmount = percent * 20;
+
+            requestAnimationFrame(() => {
+                parallaxBg.style.transform = `translateY(-${moveAmount}vh)`;
+            });
+        }
       });
     }
 
-    // === LÓGICA DE CURSOR Y HOVER IMAGEN (SOLO DESKTOP) ===
+    // === CURSOR & HOVER ===
     if (!isTouchDevice) {
       const articles = document.querySelectorAll('article');
       const hoverImg = document.querySelector('.hover-reveal-img');
       const cursor = document.querySelector('.custom-cursor');
       const interactiveEls = document.querySelectorAll('a, button, .btn-acquire');
 
-      // Variables de posición del cursor con inercia
       let mouseX = window.innerWidth / 2;
       let mouseY = window.innerHeight / 2;
       let cursorX = mouseX;
       let cursorY = mouseY;
       const ease = 0.15;
 
-      // Evento de movimiento principal
       window.addEventListener('mousemove', (e) => {
         mouseX = e.clientX;
         mouseY = e.clientY;
         cursor.classList.remove('hidden');
 
-        // Lógica de imagen hover (se mueve directo con el mouse para evitar lag visual con el cursor)
         if (hoverImg.classList.contains('active')) {
-             const offsetX = 60; // Separación del cursor
+             const offsetX = 60; 
              hoverImg.style.left = `${e.clientX + offsetX}px`;
              hoverImg.style.top = `${e.clientY}px`;
         }
       });
 
-      // Animación Loop del cursor (Inercia)
       function animateCursor() {
         cursorX += (mouseX - cursorX) * ease;
         cursorY += (mouseY - cursorY) * ease;
-        
-        // Aplicamos la transformación
         cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%)`;
-        
         requestAnimationFrame(animateCursor);
       }
       animateCursor();
 
-      // Control de visibilidad del cursor
       document.addEventListener('mouseenter', () => cursor.classList.remove('hidden'));
       document.addEventListener('mouseleave', () => cursor.classList.add('hidden'));
 
-      // Efectos en enlaces (agrandar cursor)
       interactiveEls.forEach(el => {
         el.addEventListener('mouseenter', () => cursor.classList.add('focused'));
         el.addEventListener('mouseleave', () => cursor.classList.remove('focused'));
       });
 
-      // Lógica Hover de Artículos
       articles.forEach(article => {
         article.addEventListener('mouseenter', () => {
           const imageSrc = article.getAttribute('data-image');
@@ -565,7 +502,6 @@
 
         article.addEventListener('mouseleave', () => {
           hoverImg.classList.remove('active');
-          // Limpiar src después de la transición para evitar parpadeos
           setTimeout(() => { 
             if (!hoverImg.classList.contains('active')) hoverImg.src = ''; 
           }, 300);
