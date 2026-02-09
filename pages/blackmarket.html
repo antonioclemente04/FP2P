@@ -49,19 +49,34 @@
       min-height: 100vh;
       background-image: url("../assets/images/skin.jpg");
       background-size: cover;
-      background-position: top center;
+      background-position: center center;
       background-repeat: no-repeat;
+      background-attachment: fixed;
       z-index: -1;
       will-change: background-position;
+      background-color: #000; /* Fondo de respaldo */
+    }
+
+    @media (max-width: 1024px) {
+      .parallax-bg {
+        background-size: cover;
+        background-position: center center;
+      }
     }
 
     @media (max-width: 768px) {
       .parallax-bg {
-        position: fixed;
         height: 100dvh;
         min-height: 100dvh;
         background-position: center center;
-        background-size: contain;
+        background-size: cover;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .parallax-bg {
+        background-size: cover;
+        background-position: center center;
       }
     }
 
