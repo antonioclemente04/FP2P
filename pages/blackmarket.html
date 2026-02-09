@@ -118,61 +118,64 @@
 
     header {
       position: fixed;
-      top: 1rem;
-      left: 1.5rem;
+      top: 0.5rem;
+      left: 1rem;
       z-index: 1000;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 0.4rem 0.8rem;
       border-radius: 4px;
       white-space: nowrap;
       max-width: 90%;
       overflow: hidden;
       text-overflow: ellipsis;
+      backdrop-filter: blur(2px);
     }
     
     @media (max-width: 1024px) {
       header {
-        padding: 0.4rem 0.8rem;
-        left: 1rem;
+        top: 0;
+        left: 0;
+        right: 0;
+        max-width: 100%;
+        border-radius: 0;
+        padding: 0.3rem 1rem;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.9);
       }
       
       h1 {
-        font-size: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.2;
       }
     }
     
     @media (max-width: 768px) {
       header {
-        top: 0.5rem;
-        left: 0.5rem;
-        padding: 0.3rem 0.6rem;
-        max-width: 80%;
-      }
-      
-      h1 {
-        font-size: 0.9rem;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      header {
-        padding: 0.2rem 0.5rem;
-        left: 0.5rem;
-        max-width: 70%;
+        padding: 0.3rem 0.8rem;
       }
       
       h1 {
         font-size: 0.8rem;
       }
     }
+    
+    @media (max-width: 480px) {
+      header {
+        padding: 0.2rem 0.5rem;
+      }
+      
+      h1 {
+        font-size: 0.7rem;
+      }
+    }
 
     h1 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
       margin: 0;
-      line-height: 1.2;
+      line-height: 1.1;
     }
 
     /* Estilo del enlace del header para que parezca texto normal */
@@ -189,8 +192,22 @@
     }
 
     main {
-      margin-top: 5rem;
+      margin-top: 3rem;
       padding: 0 2rem;
+    }
+    
+    @media (max-width: 1024px) {
+      main {
+        margin-top: 2.5rem;
+        padding: 0 1.5rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      main {
+        margin-top: 2rem;
+        padding: 0 1rem;
+      }
     }
     
     @media (max-width: 768px) {
