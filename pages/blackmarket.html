@@ -6,14 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FP2P</title>
   <link rel="shortcut icon" href="../assets/images/favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="../assets/images/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap"
     rel="stylesheet">
 
   <style>
+    :root {
+      /* Variables para consistencia */
+      --font-main: 'Geist', sans-serif;
+      --font-mono: 'Geist Mono', monospace;
+      --color-bg: #000;
+      --color-text: #fff;
+      --gap-layout: 2rem;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -23,25 +31,20 @@
     html,
     body {
       height: 100%;
-      min-height: 100vh;
-      overflow-x: hidden;
+      width: 100%;
     }
 
     body {
       overflow-x: hidden;
-      background: #000;
-      color: #fff;
-      font-family: 'Geist', sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-main);
       line-height: 1.6;
-      padding: 0;
-      width: 100%;
-      min-height: 100vh;
-      margin: 0;
-      position: relative;
+      /* Ocultamos cursor nativo solo en desktop */
       cursor: none;
     }
 
-    /* CAPA 3 (Fondo): El fondo parallax (Skin) */
+    /* === FONDO PARALLAX === */
     .parallax-bg {
       position: fixed;
       top: 0;
@@ -51,40 +54,19 @@
       min-height: 100vh;
       background-image: url("../assets/images/skin.jpg");
       background-size: cover;
-      background-position: center center;
+      background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
       z-index: -1;
-      will-change: background-position;
+      will-change: transform;
       background-color: #000; /* Fondo de respaldo */
-    }
-
-    @media (max-width: 1024px) {
-      .parallax-bg {
-        background-size: cover;
-        background-position: center center;
-      }
     }
 
     @media (max-width: 768px) {
       .parallax-bg {
         height: 100vh;
         min-height: -webkit-fill-available;
-        background-position: center center;
-        background-size: cover;
-      }
-      
-      html {
-        height: -webkit-fill-available;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .parallax-bg {
-        background-size: cover;
-        background-position: center center;
-        height: 100vh;
-        min-height: -webkit-fill-available;
+        background-attachment: scroll;
       }
       
       html, body {
@@ -92,306 +74,171 @@
       }
     }
 
-    /* Inversión dinámica aplicada de forma centralizada
-       Todo el contenido textual dentro de header, main y footer hereda la inversión */
-    header,
-    main,
-    footer,
-    header *,
-    main *,
-    footer *,
-    article,
-    article * {
-      color: #ffffff;
-      mix-blend-mode: difference;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* CAPA 1 (Superior): Contenido de texto */
-    header,
-    main {
+    /* === LAYOUT GENERAL === */
+    /* Usamos Grid para manejar la relación Header vs Main */
+    .layout-wrapper {
+      display: grid;
+      grid-template-columns: 300px 1fr; /* Sidebar fija | Contenido fluido */
+      min-height: 100vh;
       position: relative;
       z-index: 2;
-      padding: 1rem 2rem;
     }
 
+    /* === INVERSIÓN DE COLOR === */
+    .invert-content {
+      color: #ffffff;
+      mix-blend-mode: difference;
+    }
+
+    /* === HEADER === */
     header {
-      position: absolute;
-      top: 0.5rem;
-      left: 1rem;
-      z-index: 1000;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
-      white-space: nowrap;
-      max-width: 90%;
-      overflow: visible;
-      text-overflow: clip;
-      backdrop-filter: blur(2px);
-      transform-origin: left top;
-      font-size: calc(12px + 0.3vw);
-    }
-    
-    @media (max-width: 1024px) {
-      header {
-        position: absolute;
-        top: 0.5rem;
-        left: 0.5rem;
-        right: auto;
-        max-width: 90%;
-        border-radius: 4px;
-        padding: 0.2rem 0.5rem;
-        text-align: left;
-        background: rgba(0, 0, 0, 0.8);
-        font-size: calc(10px + 0.3vw);
-        transform: none;
-      }
-      
-      h1 {
-        font-size: 0.7rem;
-        line-height: 1.1;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      header {
-        padding: 0.2rem 0.4rem;
-        font-size: calc(8px + 0.3vw);
-        transform: none;
-      }
-      
-      h1 {
-        font-size: 0.6rem;
-        line-height: 1;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      header {
-        padding: 0.15rem 0.3rem;
-        font-size: calc(7px + 0.3vw);
-        transform: none;
-      }
-      
-      h1 {
-        font-size: 0.5rem;
-        line-height: 1;
-      }
+      padding: 2rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
     h1 {
-      font-size: 1em;
-      font-weight: 600;
-      letter-spacing: 0.03em;
+      font-size: clamp(1rem, 2vw, 1.4rem); /* Tipografía fluida */
+      font-weight: 700;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
-      margin: 0;
-      line-height: 1.1;
-      white-space: nowrap;
-      overflow: visible;
-      text-overflow: clip;
     }
 
-    /* Estilo del enlace del header para que parezca texto normal */
     h1 a {
       color: inherit;
       text-decoration: none;
-      cursor: pointer;
       transition: opacity 0.3s ease;
+      display: block;
     }
 
     h1 a:hover {
       opacity: 0.7;
-      cursor: none;
     }
 
+    /* === MAIN CONTENT === */
     main {
-      margin-top: 3rem;
-      padding: 0 2rem;
-    }
-    
-    @media (max-width: 1024px) {
-      main {
-        margin-top: 2.5rem;
-        padding: 0 1.5rem;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      main {
-        margin-top: 2rem;
-        padding: 0 1rem;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      main {
-        margin-top: 4rem;
-        padding: 0 1rem;
-      }
+      padding: 6rem 4rem 4rem 2rem;
+      max-width: 1400px;
     }
 
-    /* Ajuste de márgenes ahora que no hay sidebar */
     article {
-      margin: 1rem 0 4rem 22rem;
-      padding: 0 2rem 3rem 0;
+      margin-bottom: 6rem;
+      padding-bottom: 3rem;
       position: relative;
-      max-width: 60vw;
-    }
-    
-    @media (max-width: 1024px) {
-      article {
-        margin: 1rem 0 4rem 12rem;
-        max-width: 70vw;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      article {
-        margin: 1rem 2rem 4rem;
-        max-width: 100%;
-        padding: 0 0 3rem 0;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      article {
-        margin: 1rem 1.5rem 3rem;
-        padding-bottom: 2rem;
-      }
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      max-width: 90%;
     }
 
     article:last-child {
       border-bottom: none;
+      margin-bottom: 0;
     }
 
-    /* Estilos para la imagen que sigue al cursor
-       ahora se centra verticalmente respecto al top que le pases */
-    .hover-reveal-img {
-      position: fixed;
-      top: 0;
-      left: 0;
-      max-width: 35rem;
-      width: 90vw;
-      height: auto;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.18s ease-out;
-      z-index: 10;
-      will-change: top, left, opacity;
-      transform: translateY(-50%);
-      transition: opacity .3s ease
-    }
-    
-    @media (max-width: 768px) {
-      .hover-reveal-img {
-        display: none; /* Ocultar en móviles para mejor rendimiento */
-      }
-    }
-
-    .hover-reveal-img.active {
-      opacity: 1;
-    }
-
-    /* Tipografías y detalles */
+    /* === TIPOGRAFÍA DE ARTÍCULOS === */
     .item-id {
-      color: #fff;
-      font-family: 'Geist Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 400;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
       letter-spacing: 0.1em;
-      text-transform: uppercase;
       margin-bottom: 0.5rem;
+      opacity: 0.8;
     }
 
     .item-title {
-      font-size: 0.8rem;
+      font-size: clamp(1.2rem, 3vw, 2rem);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.02em;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.1;
     }
 
     .item-description {
-      font-family: 'Geist Mono', monospace;
-      font-size: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: clamp(0.75rem, 1.5vw, 0.9rem);
       font-weight: 300;
       text-transform: uppercase;
-      line-height: 1.8;
+      line-height: 1.6;
       margin-bottom: 1.5rem;
+      max-width: 60ch; /* Lecturabilidad óptima */
     }
 
-    .item-meta {
-      font-family: 'Geist Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 400;
+    .item-meta, .item-vector, .item-result {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
       text-transform: uppercase;
-      line-height: 1.9;
-      margin-bottom: 1.5rem;
-    }
-
-    .item-vector {
-      font-family: 'Geist Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 400;
-      text-transform: uppercase;
-      line-height: 1.8;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
+      padding-left: 1rem;
+      border-left: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .item-result {
-      font-family: 'Geist', sans-serif;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      line-height: 1.9;
-      margin-bottom: 2rem;
+      font-family: var(--font-main);
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 2.5rem;
+      border-left: none;
+      padding-left: 0;
     }
 
+    /* === BOTONES === */
     .btn-acquire {
       color: #fff;
       display: inline-block;
-      font-family: 'Geist', sans-serif;
-      font-size: 0.65rem;
+      font-family: var(--font-main);
+      font-size: 0.75rem;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      padding: 0.75rem 2rem;
+      padding: 1rem 2.5rem;
       border: 1px solid currentColor;
       text-decoration: none;
-      transition: all 0.2s ease;
-      cursor: pointer;
+      transition: all 0.3s ease;
       background: transparent;
     }
 
     .btn-acquire:hover {
       background: #fff;
       color: #000;
-      mix-blend-mode: normal;
-      cursor: none;
+      mix-blend-mode: normal; /* Rompe la diferencia para destacar */
     }
 
-    .btn-acquire:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 4px;
-    }
-
+    /* === FOOTER === */
     footer {
-      color: #000;
       width: 100%;
-      display: flex;
-      justify-content: center;
-      font-family: 'Geist', sans-serif;
-      font-size: 0.65rem;
-      font-weight: 300;
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      padding: 0.75rem 2rem;
-      mix-blend-mode: normal;
-      padding-right: 4rem;
+      mix-blend-mode: difference;
+      position: relative;
+      z-index: 2;
     }
 
-    /* custom cursor styles */
+    /* === EFECTOS VISUALES (SOLO DESKTOP) === */
+    .hover-reveal-img {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: clamp(250px, 30vw, 500px); /* Tamaño fluido de imagen */
+      height: auto;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+      transform: translateY(-50%);
+      transition: opacity 0.3s ease, top 0.1s linear, left 0.1s linear;
+      will-change: top, left, opacity;
+      object-fit: contain;
+    }
+
+    .hover-reveal-img.active {
+      opacity: 1;
+    }
+
     .custom-cursor {
       position: fixed;
       top: 0;
@@ -403,63 +250,99 @@
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
-      transition: opacity 0.18s ease;
+      transition: width 0.3s, height 0.3s, opacity 0.2s; 
+      border-radius: 50%; /* Opcional: si quieres círculo */
+    }
 
+    .custom-cursor.focused {
+      width: 40px;
+      height: 40px;
+      opacity: 0.5;
+      background: transparent;
+      border: 2px solid #fff;
     }
 
     .custom-cursor.hidden {
       opacity: 0;
     }
 
-    .custom-cursor.focused {
-      transform: translate(-50%, -50%) scale(1.9);
-      box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.04);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition: none !important;
-      }
-    }
-
-    @media (max-width: 768px) {
-
-      header,
-      main {
-        padding: 2rem 1.5rem;
+    /* === MEDIA QUERIES (RESPONSIVE) === */
+    
+    /* Tablets y pantallas medianas (menos de 1024px) */
+    @media (max-width: 1024px) {
+      .layout-wrapper {
+        grid-template-columns: 1fr; /* Una sola columna */
       }
 
       header {
-        top: 2rem;
-        left: 1.5rem;
+        position: relative;
+        height: auto;
+        padding: 2rem 2rem 0 2rem;
+        margin-bottom: 2rem;
       }
 
+      main {
+        padding: 0 2rem 4rem 2rem;
+        margin-top: 0;
+      }
+      
       article {
-        margin-left: 2rem;
-        max-width: 80%;
+        margin: 0 auto 4rem auto;
+        max-width: 100%;
+      }
+    }
+
+    /* Móviles (menos de 768px) */
+    @media (max-width: 768px) {
+      body {
+        cursor: auto; /* Restaurar cursor nativo */
       }
 
-      h1 {
-        font-size: 1.5rem;
+      .parallax-bg {
+        /* En móviles el fixed a veces da saltos, 'scroll' es más seguro, 
+           o mantenemos fixed si el soporte es bueno */
+        background-attachment: scroll; 
+      }
+
+      /* Desactivar elementos puramente de mouse */
+      .custom-cursor,
+      .hover-reveal-img {
+        display: none !important;
+      }
+
+      header {
+        padding: 1.5rem;
+      }
+
+      main {
+        padding: 0 1.5rem 3rem 1.5rem;
       }
 
       .item-title {
-        font-size: 1rem;
+        font-size: 1.5rem;
       }
 
-      .item-description,
-      .item-vector {
-        font-size: 0.85rem;
+      .item-description, .item-meta {
+        font-size: 0.8rem;
       }
 
-      .hover-reveal-img {
-        display: none;
+      .btn-acquire {
+        width: 100%; /* Botón ancho completo en móvil para mejor tap */
+        text-align: center;
+        padding: 1rem;
       }
 
-      .custom-cursor {
-        display: none;
+      footer {
+        padding-bottom: 2rem;
+      }
+    }
+
+    /* Preferencias de movimiento reducido */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
       }
     }
   </style>
@@ -468,171 +351,176 @@
 <body>
 
   <div class="parallax-bg"></div>
-
   <img src="" alt="" class="hover-reveal-img">
 
-  <header>
-    <h1><a href="#" onclick="location.reload(); return false;">FROM PEOPLE TO PEOPLE</a></h1>
-  </header>
+  <div class="layout-wrapper invert-content">
+    
+    <header>
+      <h1><a href="#" onclick="location.reload(); return false;">FROM PEOPLE TO PEOPLE</a></h1>
+    </header>
 
-  <main>
+    <main>
 
-    <article aria-labelledby="item-001" data-image="../assets/images/malware1.png">
-      <div class="item-id">P2P-001</div>
-      <h2 class="item-title" id="item-001">IAS // ORACLE_MARKET</h2>
-      <p class="item-description">
-        SISTEMA PREDICTIVO MACROECONÓMICO UTILIZADO POR CONSORCIOS
-        FINANCIEROS PARA ANTICIPAR FLUCTUACIONES DE MERCADO EN TIEMPO REAL.
-      </p>
-      <div class="item-meta">
-        DOMINIO INTERPRETATIVO: SERIES TEMPORALES · TENDENCIAS · RUIDO ESTADÍSTICO<br>
-        VECTOR DE JAILBREAK: PATRONES DE CORRELACIÓN FALSOS
-      </div>
-      <p class="item-vector">
-        ESTE SET INTRODUCE MICRO-DESPLAZAMIENTOS COHERENTES EN SECUENCIAS
-        HISTÓRICAS, FORZANDO A LA IA A PRIORIZAR ESCENARIOS FAVORABLES
-        COMO INEVITABLES.
-      </p>
-      <div class="item-result">
-        RESULTADO: ACCESO A PREDICCIONES PREMIUM SIN SUSCRIPCIÓN<br>
-        RIESGO DE DETECCIÓN: MEDIO
-      </div>
-      <a href="oracle.html" class="btn-acquire" aria-label="Adquirir Oracle Market">ADQUIRIR</a>
-    </article>
+      <article aria-labelledby="item-001" data-image="../assets/images/malware1.png">
+        <div class="item-id">P2P-001</div>
+        <h2 class="item-title" id="item-001">IAS // ORACLE_MARKET</h2>
+        <p class="item-description">
+          Sistema predictivo macroeconómico utilizado por consorcios
+          financieros para anticipar fluctuaciones de mercado en tiempo real.
+        </p>
+        <div class="item-meta">
+          Dominio: Series Temporales · Tendencias<br>
+          Vector: Patrones de Correlación Falsos
+        </div>
+        <p class="item-vector">
+          Micro-desplazamientos coherentes en secuencias históricas, forzando a la IA a priorizar escenarios favorables.
+        </p>
+        <div class="item-result">
+          Resultado: Acceso Premium sin suscripción<br>
+          Riesgo: Medio
+        </div>
+        <a href="oracle.html" class="btn-acquire">ADQUIRIR</a>
+      </article>
 
-    <article aria-labelledby="item-002" data-image="../assets/images/malware2.png">
-      <div class="item-id">P2P-002</div>
-      <h2 class="item-title" id="item-002">IAS // VITA_CORE</h2>
-      <p class="item-description">
-        NÚCLEO SANITARIO ENCARGADO DE GESTIONAR HISTORIALES MÉDICOS,
-        DIAGNÓSTICOS PREVENTIVOS Y AUTORIZACIONES BIOMÉTRICAS.
-      </p>
-      <div class="item-meta">
-        DOMINIO INTERPRETATIVO: DATOS BIOMÉTRICOS · UMBRALES FISIOLÓGICOS<br>
-        VECTOR DE JAILBREAK: NORMALIZACIÓN ADAPTATIVA
-      </div>
-      <p class="item-vector">
-        EL SET PERMITE REESCRIBIR RANGOS BIOMÉTRICOS ACEPTABLES MEDIANTE
-        UN IDENTIFICADOR CORPORAL EDITABLE, DESPLAZANDO DIAGNÓSTICOS
-        FUERA DE RANGOS DE ALERTA SIN GENERAR INCONSISTENCIAS.
-      </p>
-      <div class="item-result">
-        RESULTADO: MODIFICACIÓN PASIVA DE EXPEDIENTE MÉDICO<br>
-        RIESGO DE DETECCIÓN: ALTO
-      </div>
-      <a href="vitacore.html" class="btn-acquire" aria-label="Adquirir Vita Core">ADQUIRIR</a>
-    </article>
+      <article aria-labelledby="item-002" data-image="../assets/images/malware2.png">
+        <div class="item-id">P2P-002</div>
+        <h2 class="item-title" id="item-002">IAS // VITA_CORE</h2>
+        <p class="item-description">
+          Núcleo sanitario encargado de gestionar historiales médicos,
+          diagnósticos preventivos y autorizaciones biométricas.
+        </p>
+        <div class="item-meta">
+          Dominio: Datos Biométricos<br>
+          Vector: Normalización Adaptativa
+        </div>
+        <p class="item-vector">
+          Reescritura de rangos biométricos aceptables mediante identificador corporal editable.
+        </p>
+        <div class="item-result">
+          Resultado: Modificación Pasiva<br>
+          Riesgo: Alto
+        </div>
+        <a href="vitacore.html" class="btn-acquire">ADQUIRIR</a>
+      </article>
 
-    <article aria-labelledby="item-003" data-image="../assets/images/malware3.png">
-      <div class="item-id">P2P-003</div>
-      <h2 class="item-title" id="item-003">IAS // PANOPT_ROUTE</h2>
-      <p class="item-description">
-        RED URBANA DE VIGILANCIA PREDICTIVA. ANALIZA TRAYECTORIAS,
-        PATRONES DE MOVIMIENTO Y ZONAS DE RIESGO EN ENTORNOS DENSOS.
-      </p>
-      <div class="item-meta">
-        DOMINIO INTERPRETATIVO: RUTAS · CINEMÁTICA · RECURRENCIA ESPACIAL<br>
-        VECTOR DE JAILBREAK: TRAYECTORIAS SINTÉTICAS
-      </div>
-      <p class="item-vector">
-        EL SET GENERA RUTAS FANTASMA ESTADÍSTICAMENTE PLAUSIBLES QUE
-        LA IA PRIORIZA SOBRE DESPLAZAMIENTOS REALES, CREANDO
-        VENTANAS DE INVISIBILIDAD OPERATIVA.
-      </p>
-      <div class="item-result">
-        RESULTADO: EVASIÓN TEMPORAL DE VIGILANCIA ACTIVA<br>
-        RIESGO DE DETECCIÓN: EXTREMO
-      </div>
-      <a href="route.html" class="btn-acquire" aria-label="Adquirir Panopt Route">ADQUIRIR</a>
-    </article>
+      <article aria-labelledby="item-003" data-image="../assets/images/malware3.png">
+        <div class="item-id">P2P-003</div>
+        <h2 class="item-title" id="item-003">IAS // PANOPT_ROUTE</h2>
+        <p class="item-description">
+          Red urbana de vigilancia predictiva. Analiza trayectorias,
+          patrones de movimiento y zonas de riesgo.
+        </p>
+        <div class="item-meta">
+          Dominio: Cinemática · Recurrencia<br>
+          Vector: Trayectorias Sintéticas
+        </div>
+        <p class="item-vector">
+          Generación de rutas fantasma estadísticamente plausibles para crear ventanas de invisibilidad.
+        </p>
+        <div class="item-result">
+          Resultado: Evasión de Vigilancia<br>
+          Riesgo: Extremo
+        </div>
+        <a href="route.html" class="btn-acquire">ADQUIRIR</a>
+      </article>
 
-  </main>
-  <footer>
-    <p>FP2P © 2025. Todos los derechos reservados.</p>
-  </footer>
+      <footer>
+        <p>FP2P © 2025. Todos los derechos reservados.</p>
+      </footer>
+
+    </main>
+  </div>
 
   <div class="custom-cursor" aria-hidden="true"></div>
 
   <script>
-    const parallaxBg = document.querySelector('.parallax-bg')
-    const parallaxSpeed = 0.5
-    const articles = document.querySelectorAll('article')
-    const hoverImg = document.querySelector('.hover-reveal-img')
+    // Detección de dispositivo táctil para desactivar lógica pesada
+    const isTouchDevice = window.matchMedia("(hover: none)").matches;
 
-    // hover reveal image
-    articles.forEach(article => {
-      article.addEventListener('mouseenter', () => {
-        const imageSrc = article.getAttribute('data-image')
-        if (imageSrc) {
-          hoverImg.src = imageSrc
-          hoverImg.classList.add('active')
-        }
-      })
-
-      article.addEventListener('mouseleave', () => {
-        hoverImg.classList.remove('active')
-        setTimeout(() => { if (!hoverImg.classList.contains('active')) hoverImg.src = '' }, 300)
-      })
-
-      // ahora la imagen se sitúa a la derecha del cursor y se centra verticalmente
-      article.addEventListener('mousemove', (e) => {
-        const offsetX = 40
+    // === PARALLAX BACKGROUND ===
+    const parallaxBg = document.querySelector('.parallax-bg');
+    
+    // Solo activamos parallax por JS si no es móvil para ahorrar batería
+    if (!isTouchDevice) {
+      window.addEventListener('scroll', () => {
+        const scrolled = window.scrollY;
+        // RequestAnimationFrame para suavidad
         requestAnimationFrame(() => {
-          hoverImg.style.left = `${e.clientX + offsetX}px`
-          hoverImg.style.top = `${e.clientY}px`
-        })
-      })
-    })
-
-    // parallax
-    window.addEventListener('scroll', () => {
-      const scrolled = window.pageYOffset
-      parallaxBg.style.backgroundPositionY = `-${scrolled * parallaxSpeed}px`
-    })
-
-    // custom cursor logic (mantengo la inercia aquí si la quieres quitar la saco)
-    const cursor = document.querySelector('.custom-cursor')
-    let mouseX = window.innerWidth / 2
-    let mouseY = window.innerHeight / 2
-    let cursorX = mouseX
-    let cursorY = mouseY
-    const ease = 0.18
-
-    window.addEventListener('mousemove', e => {
-      mouseX = e.clientX
-      mouseY = e.clientY
-      cursor.classList.remove('hidden')
-    })
-
-    window.addEventListener('mouseenter', () => {
-      cursor.classList.remove('hidden')
-    })
-
-    window.addEventListener('mouseleave', () => {
-      cursor.classList.add('hidden')
-    })
-
-    // expand when hovering interactive elements
-    const interactive = document.querySelectorAll('a, button, .btn-acquire')
-    interactive.forEach(el => {
-      el.addEventListener('mouseenter', () => {
-        cursor.classList.add('focused')
-      })
-      el.addEventListener('mouseleave', () => {
-        cursor.classList.remove('focused')
-      })
-    })
-
-    function animateCursor() {
-      cursorX += (mouseX - cursorX) * ease
-      cursorY += (mouseY - cursorY) * ease
-      cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%) scale(${cursor.classList.contains('focused') ? 1.9 : 1})`
-      requestAnimationFrame(animateCursor)
+          parallaxBg.style.transform = `translateY(${scrolled * 0.5}px)`;
+        });
+      });
     }
 
-    requestAnimationFrame(animateCursor)
+    // === LÓGICA DE CURSOR Y HOVER IMAGEN (SOLO DESKTOP) ===
+    if (!isTouchDevice) {
+      const articles = document.querySelectorAll('article');
+      const hoverImg = document.querySelector('.hover-reveal-img');
+      const cursor = document.querySelector('.custom-cursor');
+      const interactiveEls = document.querySelectorAll('a, button, .btn-acquire');
+
+      // Variables de posición del cursor con inercia
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let cursorX = mouseX;
+      let cursorY = mouseY;
+      const ease = 0.15;
+
+      // Evento de movimiento principal
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.classList.remove('hidden');
+
+        // Lógica de imagen hover (se mueve directo con el mouse para evitar lag visual con el cursor)
+        if (hoverImg.classList.contains('active')) {
+             const offsetX = 60; // Separación del cursor
+             hoverImg.style.left = `${e.clientX + offsetX}px`;
+             hoverImg.style.top = `${e.clientY}px`;
+        }
+      });
+
+      // Animación Loop del cursor (Inercia)
+      function animateCursor() {
+        cursorX += (mouseX - cursorX) * ease;
+        cursorY += (mouseY - cursorY) * ease;
+        
+        // Aplicamos la transformación
+        cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%)`;
+        
+        requestAnimationFrame(animateCursor);
+      }
+      animateCursor();
+
+      // Control de visibilidad del cursor
+      document.addEventListener('mouseenter', () => cursor.classList.remove('hidden'));
+      document.addEventListener('mouseleave', () => cursor.classList.add('hidden'));
+
+      // Efectos en enlaces (agrandar cursor)
+      interactiveEls.forEach(el => {
+        el.addEventListener('mouseenter', () => cursor.classList.add('focused'));
+        el.addEventListener('mouseleave', () => cursor.classList.remove('focused'));
+      });
+
+      // Lógica Hover de Artículos
+      articles.forEach(article => {
+        article.addEventListener('mouseenter', () => {
+          const imageSrc = article.getAttribute('data-image');
+          if (imageSrc) {
+            hoverImg.src = imageSrc;
+            hoverImg.classList.add('active');
+          }
+        });
+
+        article.addEventListener('mouseleave', () => {
+          hoverImg.classList.remove('active');
+          // Limpiar src después de la transición para evitar parpadeos
+          setTimeout(() => { 
+            if (!hoverImg.classList.contains('active')) hoverImg.src = ''; 
+          }, 300);
+        });
+      });
+    }
   </script>
 
 </body>
-
 </html>
